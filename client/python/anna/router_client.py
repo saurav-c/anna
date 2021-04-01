@@ -21,22 +21,26 @@ class AnnaRouterClient(AnnaTcpClient):
 			return self._get_worker_address(key)
 		return self._query_routing(key, random.choice(self.elb_ports))
 
-	def add_node(self, public_ip, private_ip):
+	def add_node(self, public_ip, private_ip, virtual_id):
 		# Adds a node into Anna's routing hash ring
 		
-		msg = self.createNotifyMsg('join', public_ip, private_ip)
+		msg = self.createNotifyMsg('join', public_ip, private_ip, virtual_id)
 		self.sendMsg(msg)
 
 
-	def remove_node(self, public_ip, private_ip):
+	def remove_node(self, public_ip, private_ip, virtual_id):
 		# Removes a node from Anna's routing hash ring
 		
-		msg = self.createNotifyMsg('depart', public_ip, private_ip)
+		msg = self.createNotifyMsg('depart', public_ip, private_ip, virtual_id)
 		self.sendMsg(msg)
 
-	def createNotifyMsg(self, event, public_ip, private_ip):
+	def replace_node(self, public_ip, private_ip, virtual_id):
+		msg = self.createNotifyMsg('replace', public_ip, private_ip, virtual_id)
+		self.sendMsg(msg)
+
+	def createNotifyMsg(self, event, public_ip, private_ip, virtual_id):
 		tier = Tier.Name(MEMORY)
-		msg = event + ':' + tier + ':' + public_ip + ':' + private_ip + ':0'
+		msg = event + ':' + tier + ':' + public_ip + ':' + private_ip + ':0:' + virtual_id
 		return msg
 
 	def sendMsg(self, msg):

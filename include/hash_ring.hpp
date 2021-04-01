@@ -33,7 +33,12 @@ public:
 
   bool insert(Address public_ip, Address private_ip, int join_count,
               unsigned tid) {
-    ServerThread new_thread = ServerThread(public_ip, private_ip, tid, 0);
+      return insert(public_ip, private_ip, join_count, tid, private_ip);
+  }
+
+  bool insert(Address public_ip, Address private_ip, int join_count,
+              unsigned tid, string virtual_node) {
+    ServerThread new_thread = ServerThread(public_ip, private_ip, tid, 0, virtual_node);
 
     if (unique_servers.find(new_thread) != unique_servers.end()) {
       // if we already have the server, only return true if it's rejoining
@@ -49,7 +54,7 @@ public:
 
       for (unsigned virtual_num = 0; virtual_num < kVirtualThreadNum;
            virtual_num++) {
-        ServerThread st = ServerThread(public_ip, private_ip, tid, virtual_num);
+        ServerThread st = ServerThread(public_ip, private_ip, tid, virtual_num, virtual_node);
         ConsistentHashMap<ServerThread, H>::insert(st);
       }
 
@@ -58,14 +63,24 @@ public:
   }
 
   void remove(Address public_ip, Address private_ip, unsigned tid) {
+      remove(public_ip, private_ip, tid, private_ip);
+  }
+
+  void remove(Address public_ip, Address private_ip, unsigned tid, string virtual_node) {
     for (unsigned virtual_num = 0; virtual_num < kVirtualThreadNum;
          virtual_num++) {
-      ServerThread st = ServerThread(public_ip, private_ip, tid, virtual_num);
+      ServerThread st = ServerThread(public_ip, private_ip, tid, virtual_num, virtual_node);
       ConsistentHashMap<ServerThread, H>::erase(st);
     }
 
-    unique_servers.erase(ServerThread(public_ip, private_ip, tid, 0));
+    unique_servers.erase(ServerThread(public_ip, private_ip, tid, 0, virtual_node));
     server_join_count.erase(private_ip);
+  }
+
+  bool replace(Address public_ip, Address private_ip, int join_count, unsigned tid,
+               string virtual_node) {
+      remove(public_ip, private_ip, tid, virtual_node);
+      return insert(public_ip, private_ip, join_count, tid, virtual_node);
   }
 
 private:

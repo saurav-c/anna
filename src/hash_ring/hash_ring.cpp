@@ -59,7 +59,7 @@ ServerThreadList HashRingUtil::get_responsible_threads(
         }
     }
 
-  succeed = true;
+    succeed = true;
     return result;
   }
 }

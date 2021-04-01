@@ -99,6 +99,8 @@ class ServerThread {
   unsigned tid_;
   unsigned virtual_num_;
 
+  string virtual_node_;
+
 public:
   ServerThread() {}
   ServerThread(Address public_ip, Address private_ip, unsigned tid)
@@ -113,6 +115,14 @@ public:
         public_base_("tcp://" + public_ip_ + ":"), tid_(tid),
         virtual_num_(virtual_num) {}
 
+  ServerThread(Address public_ip, Address private_ip, unsigned tid,
+               unsigned virtual_num, string virtual_node)
+      : public_ip_(public_ip), private_ip_(private_ip),
+        private_base_("tcp://" + private_ip_ + ":"),
+        public_base_("tcp://" + public_ip_ + ":"), tid_(tid),
+        virtual_num_(virtual_num),
+        virtual_node_(virtual_node) {}
+
   Address public_ip() const { return public_ip_; }
 
   Address private_ip() const { return private_ip_; }
@@ -121,10 +131,12 @@ public:
 
   unsigned virtual_num() const { return virtual_num_; }
 
+  string virtual_node() const { return virtual_node_; }
+
   string id() const { return private_ip_ + ":" + std::to_string(tid_); }
 
   string virtual_id() const {
-    return private_ip_ + ":" + std::to_string(tid_) + "_" +
+    return virtual_node_ + ":" + std::to_string(tid_) + "_" +
            std::to_string(virtual_num_);
   }
 

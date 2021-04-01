@@ -73,7 +73,7 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
       respond = true;
 
       for (const ServerThread &thread : threads) {
-        tp->add_ips(thread.key_request_connect_address());
+        tp->add_ips(thread.key_request_connect_address() + ":" + thread.virtual_node());
       }
     }
   }
