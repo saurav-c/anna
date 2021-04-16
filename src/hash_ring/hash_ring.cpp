@@ -25,6 +25,7 @@ ServerThreadList HashRingUtil::get_responsible_threads(
     GlobalRingMap &global_hash_rings, LocalRingMap &local_hash_rings,
     map<Key, KeyReplication> &key_replication_map, SocketCache &pushers,
     const vector<Tier> &tiers, bool &succeed, unsigned &seed) {
+  bool rep_factor = true;
   if (metadata) {
     succeed = true;
     return kHashRingUtil->get_responsible_threads_metadata(
@@ -33,31 +34,28 @@ ServerThreadList HashRingUtil::get_responsible_threads(
     ServerThreadList result;
 
     if (key_replication_map.find(key) == key_replication_map.end()) {
-      kHashRingUtil->issue_replication_factor_request(
-          response_address, key, global_hash_rings[Tier::MEMORY],
-          local_hash_rings[Tier::MEMORY], pushers, seed);
-      succeed = false;
-    } else {
-      for (const Tier &tier : tiers) {
-        ServerThreadList threads = responsible_global(
-            key, key_replication_map[key].global_replication_[tier],
-            global_hash_rings[tier]);
+      rep_factor = false;
+    }
+    for (const Tier &tier : tiers) {
+      auto global_rep = rep_factor ? key_replication_map[key].global_replication_[tier] : 1;
+      ServerThreadList threads = responsible_global(
+          key, global_rep,
+          global_hash_rings[tier]);
 
-        for (const ServerThread &thread : threads) {
-          Address public_ip = thread.public_ip();
-          Address private_ip = thread.private_ip();
-          set<unsigned> tids = responsible_local(
-              key, key_replication_map[key].local_replication_[tier],
-              local_hash_rings[tier]);
+      for (const ServerThread &thread : threads) {
+        Address public_ip = thread.public_ip();
+        Address private_ip = thread.private_ip();
+        auto local_rep = rep_factor ? key_replication_map[key].local_replication_[tier] : 1;
+        set<unsigned> tids = responsible_local(
+            key, local_rep,
+            local_hash_rings[tier]);
 
-          for (const unsigned &tid : tids) {
-            result.push_back(ServerThread(public_ip, private_ip, tid));
-          }
+        for (const unsigned &tid : tids) {
+          result.push_back(ServerThread(public_ip, private_ip, tid));
         }
       }
-
-      succeed = true;
     }
+    succeed = true;
     return result;
   }
 }

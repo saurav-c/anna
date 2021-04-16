@@ -41,27 +41,6 @@ void membership_handler(logger log, string &serialized, SocketCache &pushers,
 
     if (inserted) {
       if (thread_id == 0) {
-        // gossip the new node address between server nodes to ensure
-        // consistency
-        for (const auto &pair : global_hash_rings) {
-          const GlobalHashRing hash_ring = pair.second;
-
-          // we send a message with everything but the join because that is
-          // what the server nodes expect
-          // NOTE: this seems like a bit of a hack right now -- should we have
-          // a less ad-hoc way of doing message generation?
-          string msg = v[1] + ":" + v[2] + ":" + v[3] + ":" + v[4];
-
-          for (const ServerThread &st : hash_ring.get_unique_servers()) {
-            // if the node is not the newly joined node, send the ip of the
-            // newly joined node
-            if (st.private_ip().compare(new_server_private_ip) != 0) {
-              kZmqUtil->send_string(msg,
-                                    &pushers[st.node_join_connect_address()]);
-            }
-          }
-        }
-
         // tell all worker threads about the message
         for (unsigned tid = 1; tid < kRoutingThreadCount; tid++) {
           kZmqUtil->send_string(
