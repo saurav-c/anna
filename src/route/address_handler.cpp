@@ -20,6 +20,8 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
                      map<Key, KeyReplication> &key_replication_map,
                      map<Key, vector<pair<Address, string>>> &pending_requests,
                      unsigned &seed) {
+
+  log->info("Received address request");
   KeyAddressRequest addr_request;
   addr_request.ParseFromString(serialized);
 
@@ -45,7 +47,7 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
   } else { // if there are servers, attempt to return the correct threads
     for (const Key &key : addr_request.keys()) {
       ServerThreadList threads = {};
-
+      log->info("Checking address for {}", key);
       if (key.length() >
           0) { // Only run this code is the key is a valid string.
         // Otherwise, an empty response will be sent.
@@ -84,5 +86,6 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
 
     kZmqUtil->send_string(serialized,
                           &pushers[addr_request.response_address()]);
+    log->info("Sent response to {}", addr_request.response_address());
   }
 }
