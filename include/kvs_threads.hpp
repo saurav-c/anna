@@ -153,7 +153,7 @@ public:
   }
 
   Address key_request_connect_address() const {
-    return public_base_ + std::to_string(tid_ + kKeyRequestPort);
+    return public_base_;
   }
 
   Address key_request_bind_address() const {
