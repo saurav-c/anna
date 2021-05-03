@@ -769,7 +769,7 @@ int main(int argc, char *argv[]) {
   vector<Address> monitoring_ips;
 
   Address seed_ip = server["seed_ip"].as<string>();
-  Address mgmt_ip = server["mgmt_ip"].as<string>();
+  Address mgmt_ip = "NULL";
   YAML::Node monitoring = server["monitoring"];
   YAML::Node routing = server["routing"];
 
