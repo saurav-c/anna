@@ -113,10 +113,14 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   addr_requester.connect(RoutingThread(seed_ip, 0).seed_connect_address());
   kZmqUtil->send_string("join", &addr_requester);
 
+  log->info("Sent seed request to {}", seed_ip);
+
   // receive and add all the addresses that seed node sent
   string serialized_addresses = kZmqUtil->recv_string(&addr_requester);
   ClusterMembership membership;
   membership.ParseFromString(serialized_addresses);
+
+  log->info("Received seed response from {}", seed_ip);
 
   // get join number from management node if we are running in Kubernetes
   string count_str;
@@ -124,7 +128,10 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
   // if we are running the system outside of Kubernetes, we need to set the
   // management address to NULL in the conf file, otherwise we will hang
   // forever waiting to hear back about a restart count
+
+  log->info("Using management ip {}", management_ip);
   if (management_ip != "NULL") {
+    log->info("Waiting for management response");
     zmq::socket_t join_count_requester(context, ZMQ_REQ);
     join_count_requester.connect(get_join_count_req_address(management_ip));
     kZmqUtil->send_string("restart:" + private_ip, &join_count_requester);
@@ -157,6 +164,8 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
     }
   }
 
+  log->info("Hash rings formed");
+
   // thread 0 notifies other servers that it has joined
   if (thread_id == 0) {
     string msg = Tier_Name(kSelfTier) + ":" + public_ip + ":" + private_ip +
@@ -176,12 +185,14 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
 
     // notify proxies that this node has joined
     for (const string &address : routing_ips) {
+      log->info("Telling router {} about join", address);
       kZmqUtil->send_string(
           msg, &pushers[RoutingThread(address, 0).notify_connect_address()]);
     }
 
     // notify monitoring nodes that this node has joined
     for (const string &address : monitoring_ips) {
+      log->info("Telling monitor {} about join", address);
       kZmqUtil->send_string(
           msg, &pushers[MonitoringThread(address).notify_connect_address()]);
     }
