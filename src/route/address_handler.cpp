@@ -20,6 +20,7 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
                      map<Key, KeyReplication> &key_replication_map,
                      map<Key, vector<pair<Address, string>>> &pending_requests,
                      unsigned &seed) {
+
   KeyAddressRequest addr_request;
   addr_request.ParseFromString(serialized);
 
@@ -44,6 +45,7 @@ void address_handler(logger log, string &serialized, SocketCache &pushers,
     respond = true;
   } else { // if there are servers, attempt to return the correct threads
     for (const Key &key : addr_request.keys()) {
+      log->info("Received key request for {}", key);
       ServerThreadList threads = {};
 
       if (key.length() >
