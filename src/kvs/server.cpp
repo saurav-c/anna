@@ -547,6 +547,8 @@ void run(unsigned thread_id, Address public_ip, Address private_ip,
         log->info("Occupancy is {}.", std::to_string(occupancy));
       }
 
+      log->info("Storage Map Size {} KB", consumption / 1000);
+
       ServerThreadStatistics stat;
       stat.set_storage_consumption(consumption / 1000); // cast to KB
       stat.set_occupancy(occupancy);

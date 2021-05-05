@@ -40,6 +40,22 @@ void user_request_handler(
     Key key = tuple.key();
     string payload = tuple.payload();
 
+    // Special DELETE key
+    if (key == "DELETE") {
+      log->info("Received DELETE request...clearing the map");
+      unsigned long long consumption = 0;
+      for (const auto &key_pair : stored_key_map) {
+        consumption += key_pair.second.size_;
+      }
+      log->info("Previous map size: {} KB", consumption / 1000);
+      stored_key_map.clear();
+      consumption = 0;
+      for (const auto &key_pair : stored_key_map) {
+        consumption += key_pair.second.size_;
+      }
+      log->info("New map size: {} KB", consumption / 1000);
+    }
+
     ServerThreadList threads = kHashRingUtil->get_responsible_threads(
         wt.replication_response_connect_address(), key, is_metadata(key),
         global_hash_rings, local_hash_rings, key_replication_map, pushers,
