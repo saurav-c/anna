@@ -54,7 +54,7 @@ void user_request_handler(
         consumption += key_pair.second.size_;
       }
       log->info("New map size: {} KB", consumption / 1000);
-      return
+      return;
     }
 
     ServerThreadList threads = kHashRingUtil->get_responsible_threads(
